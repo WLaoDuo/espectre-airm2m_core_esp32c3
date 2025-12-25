@@ -23,9 +23,9 @@ jobs:
 
       # 3. 使用 ESPHome Action 进行编译
       - name: Build ESPHome Binary
-        uses: esphome/build-action@v5
+        uses: esphome/build-action@v7
         with:
-          yaml_file: device.yaml # 这里改成你实际的文件名
+          yaml_file: /examples/airm2m_core_esp32c3.yaml # 这里改成你实际的文件名
           version: latest       # 可以指定具体版本，如 2024.11.0
 
       # 4. 将生成的 bin 固件作为附件上传
