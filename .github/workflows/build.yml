@@ -1,6 +1,5 @@
 name: ESPHome Build
 
-# 触发条件：推送到 main 分支或手动点击运行
 on:
   push:
     branches: [main]
@@ -10,35 +9,49 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # 1. 检出你的代码
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # 2. 读取缓存以加快以后编译的速度
-      - name: Cache ESPHome
+      # 1. 优化缓存：不仅缓存 .esphome 编译中间件，还缓存 pip 依赖
+      - name: Cache ESPHome and Pip
         uses: actions/cache@v4
         with:
-          path: .esphome
-          # key 的设计建议包含 esphome 版本或系统平台，
-          # 这里使用 hashFiles 监控所有 yaml 变动是正确的
-          key: esphome-cache-${{ runner.os }}-${{ hashFiles('*.yaml') }}
+          path: |
+            ~/.cache/pip
+            .esphome
+          key: esphome-${{ runner.os }}-${{ hashFiles('*.yaml') }}
           restore-keys: |
-            esphome-cache-${{ runner.os }}-
+            esphome-${{ runner.os }}-
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      
+          cache: 'pip' # setup-python 内置的 pip 缓存支持
+
       - name: Install ESPHome
         run: |
           python -m pip install --upgrade pip
           pip install esphome
-          
-      - name: Compile
+
+      # 2. 使用 Dashboard 命令提前验证并安装依赖，减少 Compile 时的意外中断
+      - name: Config validation
+        run: esphome config examples/airm2m_core_esp32c3.yaml
+
+      - name: Compile ESPHome Binary
         run: esphome compile examples/airm2m_core_esp32c3.yaml
-      
+
+      # 3. 优化产物收集：
+      # 使用通配符定位所有的 factory.bin，并将其整理到一个固定目录方便下载
+      - name: find bin
+        run: |
+          mkdir -p output
+          # 搜索 examples 目录下所有的 factory.bin 并拷贝到 output 文件夹
+          find examples/.esphome/build -name "firmware*.bin" -exec cp {} output/ \;
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: device-firmware
-          path: .esphome/build/*/.pioenvs/*/firmware.factory.bin
+          path: output/
+          if-no-files-found: error
