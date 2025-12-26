@@ -14,12 +14,15 @@ jobs:
       - uses: actions/checkout@v4
 
       # 2. 读取缓存以加快以后编译的速度
-      - type: cache
+      - name: Cache ESPHome
+        uses: actions/cache@v4
         with:
           path: .esphome
-          key: esphome-cache-${{ hashFiles('*.yaml') }}
+          # key 的设计建议包含 esphome 版本或系统平台，
+          # 这里使用 hashFiles 监控所有 yaml 变动是正确的
+          key: esphome-cache-${{ runner.os }}-${{ hashFiles('*.yaml') }}
           restore-keys: |
-            esphome-cache-
+            esphome-cache-${{ runner.os }}-
 
       # 3. 使用 ESPHome Action 进行编译
       - name: Build ESPHome Binary
