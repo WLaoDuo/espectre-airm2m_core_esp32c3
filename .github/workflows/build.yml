@@ -35,11 +35,10 @@ jobs:
           pip install esphome
           
       - name: Compile
-        run: esphome compile examples/airm2m_core_esp32c3.yaml --binary-path .esphome/build/airm2m_core_esp32c3.bin
-      
+        run: esphome compile examples/airm2m_core_esp32c3.yaml
       
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: device-firmware
-          path: .esphome/build/airm2m_core_esp32c3.bin
+          path: .esphome/build/*/.pioenvs/*/firmware.factory.bin
