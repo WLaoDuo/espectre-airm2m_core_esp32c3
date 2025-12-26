@@ -24,16 +24,22 @@ jobs:
           restore-keys: |
             esphome-cache-${{ runner.os }}-
 
-      # 3. 使用 ESPHome Action 进行编译
-      - name: Build ESPHome Binary
-        uses: esphome/build-action@v7
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          yaml_file: /examples/airm2m_core_esp32c3.yaml # 这里改成你实际的文件名
-          version: latest       # 可以指定具体版本，如 2024.11.0
-
-      # 4. 将生成的 bin 固件作为附件上传
+          python-version: '3.12'
+      
+      - name: Install ESPHome
+        run: |
+          python -m pip install --upgrade pip
+          pip install esphome
+          
+      - name: Compile
+        run: esphome compile examples/airm2m_core_esp32c3.yaml --binary-path .esphome/build/airm2m_core_esp32c3.bin
+      
+      
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: device-firmware
-          path: .esphome/build/*/output/firmware.bin
+          path: .esphome/build/airm2m_core_esp32c3.bin
