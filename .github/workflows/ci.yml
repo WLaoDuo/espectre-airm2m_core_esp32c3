@@ -1,14 +1,14 @@
 name: CI
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'components/espectre/**'
-      - 'micro-espectre/src/**'
-      - 'micro-espectre/tests/**'
-      - 'test/**'
-      - 'examples/*.yaml'
+  # push:
+  #   branches: [main, develop]
+  #   paths:
+  #     - 'components/espectre/**'
+  #     - 'micro-espectre/src/**'
+  #     - 'micro-espectre/tests/**'
+  #     - 'test/**'
+  #     - 'examples/*.yaml'
   pull_request:
     branches: [main]
     paths:
