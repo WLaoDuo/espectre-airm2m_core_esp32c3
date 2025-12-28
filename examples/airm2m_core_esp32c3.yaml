@@ -42,7 +42,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/francescopace/espectre
-      ref: main
+      ref: 5bf72c9953f94ddabea0db45b5c3651d0ee89555 #main
     components: [ espectre ]
     refresh: always
 
@@ -67,8 +67,8 @@ wifi:
 captive_portal:
 
 # Improv provisioning via BLE
-# esp32_improv:
-#   authorizer: none
+esp32_improv:
+  authorizer: none
 
 # Improv provisioning via USB
 improv_serial:
