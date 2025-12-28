@@ -36,6 +36,13 @@ esp32:
   framework:
     type: esp-idf
     version: 5.5.1
+    sdkconfig_options:
+      # Power Management (critical for CSI reliability)
+      CONFIG_PM_ENABLE: n                             # Disable all power management
+      CONFIG_ESP_WIFI_STA_DISCONNECTED_PM_ENABLE: n   # No power save when disconnected
+      # CSI Feature
+      CONFIG_ESP_WIFI_CSI_ENABLED: y                  # Enable CSI extraction from WiFi packets
+
 
 # Load ESPectre component from GitHub
 external_components:
