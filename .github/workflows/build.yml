@@ -42,7 +42,7 @@ jobs:
       - name: Update commit hash in config
         run: |
           cp examples/airm2m_core_esp32c3.yaml examples/espectre-c3.yaml.backup
-          COMMIT_HASH="${{ github.event.inputs.commit_hash || 'main' }}"
+          COMMIT_HASH="${{ inputs.commit || 'main' }}"
           sed -i "s|ref: .*|ref: ${COMMIT_HASH}|" examples/airm2m_core_esp32c3.yaml
           grep "ref:" examples/airm2m_core_esp32c3.yaml
           
