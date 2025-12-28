@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      commit:
+        description: "commit"
+        required: false
+        default: "main"
 
 jobs:
   build:
@@ -40,6 +45,8 @@ jobs:
 
       - name: Compile ESPHome Binary
         run: esphome compile examples/airm2m_core_esp32c3.yaml
+        env:
+          COMMIT_HASH: ${{ inputs.commit }}
 
       # 3. 优化产物收集：
       # 使用通配符定位所有的 factory.bin，并将其整理到一个固定目录方便下载
@@ -52,6 +59,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: device-firmware
+          name: firmware-${{ inputs.commit }}
           path: output/
           if-no-files-found: error
