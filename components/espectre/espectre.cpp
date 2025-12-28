@@ -55,6 +55,14 @@ void ESpectreComponent::setup() {
   // 4. Initialize managers (each manager handles its own internal initialization)
   this->calibration_manager_.init(&this->csi_manager_);
   this->traffic_generator_.init(this->traffic_generator_rate_);
+  this->serial_streamer_.init();
+  this->serial_streamer_.set_threshold_callback([this](float threshold) {
+    this->set_threshold_runtime(threshold);
+  });
+  this->serial_streamer_.set_start_callback([this]() {
+    this->send_system_info_();
+  });
+  
   this->csi_manager_.init(
     &this->csi_processor_,
     this->selected_subcarriers_,
@@ -107,6 +115,15 @@ void ESpectreComponent::on_wifi_connected_() {
         this->sensor_publisher_.publish_all(&this->csi_processor_, state);
       }
     ));
+    
+    // Set up game mode callback (called every CSI packet when active)
+    this->csi_manager_.set_game_mode_callback(
+      [this](float movement, float threshold) {
+        if (this->serial_streamer_.is_active()) {
+          this->serial_streamer_.send_data(movement, threshold);
+        }
+      }
+    );
   }
   
   // Start traffic generator
@@ -153,7 +170,12 @@ void ESpectreComponent::on_wifi_connected_() {
               memcpy(this->selected_subcarriers_, band, size);
               this->csi_manager_.update_subcarrier_selection(band);
             }
-            // Apply normalization scale to compensate for different ESP32 CSI amplitude ranges
+          }
+          
+          // Apply normalization if calibration produced valid data
+          // band == nullptr means critical failure (e.g., SPIFFS error) - skip normalization
+          // band != nullptr means at least partial success - apply normalization
+          if (band != nullptr) {
             this->normalization_scale_ = normalization_scale;
             csi_processor_set_normalization_scale(&this->csi_processor_, normalization_scale);
             
@@ -195,7 +217,8 @@ void ESpectreComponent::on_wifi_disconnected_() {
 }
 
 void ESpectreComponent::loop() {
-  // Currently empty - CSI processing happens in callback
+  // Check for game mode Serial commands
+  this->serial_streamer_.check_commands();
 }
 
 void ESpectreComponent::set_threshold_runtime(float threshold) {
@@ -213,7 +236,35 @@ void ESpectreComponent::set_threshold_runtime(float threshold) {
   config.segmentation_threshold = threshold;
   this->config_manager_.save(config);
   
+  // Publish to Home Assistant
+  if (this->threshold_number_ != nullptr) {
+    this->threshold_number_->publish_state(threshold);
+  }
+  
   ESP_LOGI(TAG, "Threshold updated to %.2f (saved to flash)", threshold);
+}
+
+void ESpectreComponent::send_system_info_() {
+  // Send system info in parseable format for the game
+  // Format: [I][sysinfo:NNN][espectre]: KEY=VALUE
+  
+  // CONFIG_IDF_TARGET_ARCH returns e.g. "esp32c6" - we uppercase it
+  ESP_LOGI(TAG, "[sysinfo] chip=" CONFIG_IDF_TARGET);
+  ESP_LOGI(TAG, "[sysinfo] threshold=%.2f", this->segmentation_threshold_);
+  ESP_LOGI(TAG, "[sysinfo] window=%d", this->segmentation_window_size_);
+  ESP_LOGI(TAG, "[sysinfo] subcarriers=%s", this->user_specified_subcarriers_ ? "yaml" : "nbvi");
+  ESP_LOGI(TAG, "[sysinfo] lowpass=%s", this->lowpass_enabled_ ? "on" : "off");
+  if (this->lowpass_enabled_) {
+    ESP_LOGI(TAG, "[sysinfo] lowpass_cutoff=%.1f", this->lowpass_cutoff_);
+  }
+  ESP_LOGI(TAG, "[sysinfo] hampel=%s", this->hampel_enabled_ ? "on" : "off");
+  if (this->hampel_enabled_) {
+    ESP_LOGI(TAG, "[sysinfo] hampel_window=%d", this->hampel_window_);
+    ESP_LOGI(TAG, "[sysinfo] hampel_threshold=%.1f", this->hampel_threshold_);
+  }
+  ESP_LOGI(TAG, "[sysinfo] traffic_rate=%u", this->traffic_generator_rate_);
+  ESP_LOGI(TAG, "[sysinfo] norm_scale=%.4f", this->normalization_scale_);
+  ESP_LOGI(TAG, "[sysinfo] END");
 }
 
 void ESpectreComponent::dump_config() {

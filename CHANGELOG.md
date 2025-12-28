@@ -6,6 +6,58 @@ All notable changes to this project will be documented in this file.
 
 ## [2.3.0] - in progress
 
+### WiFi Channel Change Detection
+
+Automatic detection of WiFi channel changes to prevent false motion detection.
+
+- **Problem**: When the AP switches channel (auto-channel, roaming), CSI data spikes cause false positives
+- **Solution**: Track channel from CSI packet metadata; reset detection buffer on change
+- **Implementation**: Check at publish time (every ~100 packets) to minimize overhead
+- **Log output**: `[W][CSIManager]: WiFi channel changed: 6 -> 11, resetting detection buffer`
+- **Aligned C++ and Python**: Both platforms use packet channel metadata (`data->channel` / `frame[1]`)
+
+Fixes [#46](https://github.com/francescopace/espectre/issues/46).
+
+### ESPectre - The Game
+
+A browser-based reaction game that demonstrates ESPectre motion detection capabilities. No controller needed - your physical movement controls the game through WiFi sensing.
+
+**Gameplay:**
+- You are a Spectrum Guardian protecting WiFi frequencies from malicious Spectres
+- When an enemy appears, stay still; when you see "MOVE!", react fast to dissolve it
+- Move harder for more damage (weak/normal/strong/critical hits)
+- Progressive difficulty with 5 enemy types across 15 waves
+
+**Practical uses:**
+- **Threshold tuning**: Drag the threshold slider and see immediate visual feedback; changes are saved to flash and apply to Home Assistant
+- **Calibration verification**: System info panel shows current configuration (chip model, subcarrier selection mode, filters) to confirm device is properly calibrated
+- **Coverage testing**: Walk around the room while watching the movement bar to find optimal sensor placement
+
+**Technical:**
+- Web Serial API for USB communication (Chrome/Edge)
+- Real-time CSI streaming at ~100 Hz
+- Ping keep-alive protocol (auto-stops streaming on browser disconnect)
+
+**Files:** `docs/game/` (game.js, game.css, index.html, README.md)
+
+### Multi-Window NBVI Calibration
+
+Optimized subcarrier selection with multi-window validation for better accuracy.
+
+- **Multi-window validation**: Evaluate all candidate window sizes, select by minimum false positive rate
+- **Gain lock skip**: First 300 packets (gain lock phase) excluded from calibration data
+- **Noise gate**: Updated percentile from 10% to 25% for better noise floor detection
+- **Percentile fix**: Proper sorting before threshold calculation
+
+### Calibration Fallback with Normalization
+
+Improved resilience when NBVI calibration cannot find optimal subcarriers.
+
+- **Normalization always calculated**: Even when subcarrier selection fails, baseline variance normalization is computed
+- **Default subcarriers used**: Falls back to [11-22] band instead of returning an error
+- **Prevents false positives**: Without fallback, calibration failure caused 2000%+ motion values due to missing normalization
+- **Aligned C++ and Python**: Both platforms now implement identical fallback behavior
+
 ### ESP32 (Original/WROOM-32) Tested
 
 - Tested on ESP32-WROOM-32D Mini (CH340) board

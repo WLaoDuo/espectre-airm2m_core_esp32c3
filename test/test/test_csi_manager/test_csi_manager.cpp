@@ -217,27 +217,25 @@ void test_csi_manager_process_packet_null_data(void) {
     CSIManager manager;
     manager.init(&g_processor, TEST_SUBCARRIERS, 1.0f, 50, 100, true, 11.0f, false, 7, 3.0f, &g_wifi_mock);
     
-    csi_motion_state_t state = CSI_STATE_IDLE;  // Initialize to IDLE
-    manager.process_packet(nullptr, state);
+    manager.process_packet(nullptr);
     
     // Should not crash, state should remain IDLE
-    TEST_ASSERT_EQUAL(CSI_STATE_IDLE, state);
+    TEST_ASSERT_EQUAL(CSI_STATE_IDLE, csi_processor_get_state(&g_processor));
 }
 
 void test_csi_manager_process_packet_short_data(void) {
     CSIManager manager;
     manager.init(&g_processor, TEST_SUBCARRIERS, 1.0f, 50, 100, true, 11.0f, false, 7, 3.0f, &g_wifi_mock);
     
-    wifi_csi_info_t csi_info;
+    wifi_csi_info_t csi_info = {};
     int8_t short_buf[5] = {0};
     csi_info.buf = short_buf;
     csi_info.len = 5;  // Too short
     
-    csi_motion_state_t state = CSI_STATE_IDLE;
-    manager.process_packet(&csi_info, state);
+    manager.process_packet(&csi_info);
     
     // Should handle gracefully
-    TEST_ASSERT_EQUAL(CSI_STATE_IDLE, state);
+    TEST_ASSERT_EQUAL(CSI_STATE_IDLE, csi_processor_get_state(&g_processor));
 }
 
 void test_csi_manager_process_packet_real_data(void) {
@@ -246,12 +244,11 @@ void test_csi_manager_process_packet_real_data(void) {
     
     // Process several baseline packets
     for (int i = 0; i < 10; i++) {
-        wifi_csi_info_t csi_info;
+        wifi_csi_info_t csi_info = {};
         csi_info.buf = const_cast<int8_t*>(baseline_packets[i]);
         csi_info.len = 128;
         
-        csi_motion_state_t state;
-        manager.process_packet(&csi_info, state);
+        manager.process_packet(&csi_info);
     }
     
     // After processing baseline, should be IDLE
@@ -266,22 +263,20 @@ void test_csi_manager_process_packet_detects_motion(void) {
     // Process enough packets to fill the window and get moving variance
     // Need at least window_size packets before variance is calculated
     for (int i = 0; i < 50; i++) {
-        wifi_csi_info_t csi_info;
+        wifi_csi_info_t csi_info = {};
         csi_info.buf = const_cast<int8_t*>(baseline_packets[i % 100]);
         csi_info.len = 128;
         
-        csi_motion_state_t state;
-        manager.process_packet(&csi_info, state);
+        manager.process_packet(&csi_info);
     }
     
     // Now process movement packets
     for (int i = 0; i < 50; i++) {
-        wifi_csi_info_t csi_info;
+        wifi_csi_info_t csi_info = {};
         csi_info.buf = const_cast<int8_t*>(movement_packets[i % 100]);
         csi_info.len = 128;
         
-        csi_motion_state_t state;
-        manager.process_packet(&csi_info, state);
+        manager.process_packet(&csi_info);
     }
     
     // Verify that packets were processed
@@ -314,12 +309,11 @@ void test_csi_manager_callback_invoked(void) {
     
     // Process 10 packets
     for (int i = 0; i < 10; i++) {
-        wifi_csi_info_t csi_info;
+        wifi_csi_info_t csi_info = {};
         csi_info.buf = const_cast<int8_t*>(baseline_packets[i]);
         csi_info.len = 128;
         
-        csi_motion_state_t state;
-        manager.process_packet(&csi_info, state);
+        manager.process_packet(&csi_info);
     }
     
     // Callback should have been invoked twice (at packet 5 and 10)
@@ -335,12 +329,11 @@ void test_csi_manager_callback_not_invoked_before_publish_rate(void) {
     
     // Process only 10 packets (less than publish_rate of 100)
     for (int i = 0; i < 10; i++) {
-        wifi_csi_info_t csi_info;
+        wifi_csi_info_t csi_info = {};
         csi_info.buf = const_cast<int8_t*>(baseline_packets[i]);
         csi_info.len = 128;
         
-        csi_motion_state_t state;
-        manager.process_packet(&csi_info, state);
+        manager.process_packet(&csi_info);
     }
     
     // Callback should not have been invoked
@@ -383,12 +376,11 @@ void test_csi_manager_with_calibrator_not_calibrating(void) {
     
     // Process packets - should process normally since calibrator is not calibrating
     for (int i = 0; i < 5; i++) {
-        wifi_csi_info_t csi_info;
+        wifi_csi_info_t csi_info = {};
         csi_info.buf = const_cast<int8_t*>(baseline_packets[i]);
         csi_info.len = 128;
         
-        csi_motion_state_t state;
-        manager.process_packet(&csi_info, state);
+        manager.process_packet(&csi_info);
     }
     
     // Processor should have processed them (calibrator was not calibrating)
@@ -404,12 +396,11 @@ void test_csi_manager_null_calibrator_processes_normally(void) {
     
     // Process packets - should process normally
     for (int i = 0; i < 5; i++) {
-        wifi_csi_info_t csi_info;
+        wifi_csi_info_t csi_info = {};
         csi_info.buf = const_cast<int8_t*>(baseline_packets[i]);
         csi_info.len = 128;
         
-        csi_motion_state_t state;
-        manager.process_packet(&csi_info, state);
+        manager.process_packet(&csi_info);
     }
     
     // Processor should have processed them
@@ -439,12 +430,11 @@ void test_csi_manager_delegates_when_calibrating(void) {
     uint32_t initial_packets = csi_processor_get_total_packets(&g_processor);
     
     for (int i = 0; i < 10; i++) {
-        wifi_csi_info_t csi_info;
+        wifi_csi_info_t csi_info = {};
         csi_info.buf = const_cast<int8_t*>(baseline_packets[i]);
         csi_info.len = 128;
         
-        csi_motion_state_t state;
-        manager.process_packet(&csi_info, state);
+        manager.process_packet(&csi_info);
     }
     
     // Processor should NOT have processed them (delegated to calibrator)
@@ -453,6 +443,43 @@ void test_csi_manager_delegates_when_calibrating(void) {
     // Cleanup
     manager.set_calibration_mode(nullptr);
     remove("/tmp/test_cal_delegate.bin");
+}
+
+void test_csi_manager_calibration_triggers_periodic_yield(void) {
+    // Test that calibration processes 100+ packets to trigger the periodic yield
+    // This covers the vTaskDelay(1) path in add_packet when buffer_count_ % 100 == 0
+    CSIManager manager;
+    manager.init(&g_processor, TEST_SUBCARRIERS, 1.0f, 50, 100, true, 11.0f, false, 7, 3.0f, &g_wifi_mock);
+    
+    // Create CalibrationManager with buffer size > 100 to trigger periodic flush/yield
+    CalibrationManager calibrator;
+    calibrator.init(&manager, "/tmp/test_cal_yield.bin");
+    calibrator.set_buffer_size(150);  // Need > 100 to trigger the yield path
+    
+    // Start calibration
+    uint8_t dummy_band[12] = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21};
+    esp_err_t err = calibrator.start_auto_calibration(dummy_band, 12, nullptr);
+    TEST_ASSERT_EQUAL(ESP_OK, err);
+    TEST_ASSERT_TRUE(calibrator.is_calibrating());
+    
+    // Set calibration mode on manager
+    manager.set_calibration_mode(&calibrator);
+    
+    // Process 120 packets - this should trigger the periodic yield at packet 100
+    for (int i = 0; i < 120; i++) {
+        wifi_csi_info_t csi_info = {};
+        csi_info.buf = const_cast<int8_t*>(baseline_packets[i % 100]);
+        csi_info.len = 128;
+        
+        manager.process_packet(&csi_info);
+    }
+    
+    // Calibrator should still be calibrating (buffer not full yet, need 150)
+    TEST_ASSERT_TRUE(calibrator.is_calibrating());
+    
+    // Cleanup
+    manager.set_calibration_mode(nullptr);
+    remove("/tmp/test_cal_yield.bin");
 }
 
 void test_csi_manager_calibrator_lifecycle(void) {
@@ -470,12 +497,11 @@ void test_csi_manager_calibrator_lifecycle(void) {
     manager.set_calibration_mode(nullptr);
     
     // Process packets - should work normally
-    wifi_csi_info_t csi_info;
+    wifi_csi_info_t csi_info = {};
     csi_info.buf = const_cast<int8_t*>(baseline_packets[0]);
     csi_info.len = 128;
     
-    csi_motion_state_t state;
-    manager.process_packet(&csi_info, state);
+    manager.process_packet(&csi_info);
     
     TEST_PASS();
 }
@@ -495,12 +521,11 @@ void test_csi_manager_full_workflow(void) {
     
     // Process some packets
     for (int i = 0; i < 30; i++) {
-        wifi_csi_info_t csi_info;
+        wifi_csi_info_t csi_info = {};
         csi_info.buf = const_cast<int8_t*>(baseline_packets[i % 100]);
         csi_info.len = 128;
         
-        csi_motion_state_t state;
-        manager.process_packet(&csi_info, state);
+        manager.process_packet(&csi_info);
     }
     
     // Update threshold
@@ -522,13 +547,12 @@ void test_csi_manager_baseline_then_motion(void) {
     manager.enable(test_callback);
     
     // Phase 1: Baseline (should stay IDLE)
-    csi_motion_state_t state = CSI_STATE_IDLE;
     for (int i = 0; i < 50; i++) {
-        wifi_csi_info_t csi_info;
+        wifi_csi_info_t csi_info = {};
         csi_info.buf = const_cast<int8_t*>(baseline_packets[i]);
         csi_info.len = 128;
         
-        manager.process_packet(&csi_info, state);
+        manager.process_packet(&csi_info);
     }
     
     ESP_LOGI(TAG, "After baseline: state=%d, callbacks=%d", 
@@ -536,21 +560,100 @@ void test_csi_manager_baseline_then_motion(void) {
     
     // Phase 2: Movement (should detect MOTION)
     for (int i = 0; i < 50; i++) {
-        wifi_csi_info_t csi_info;
+        wifi_csi_info_t csi_info = {};
         csi_info.buf = const_cast<int8_t*>(movement_packets[i]);
         csi_info.len = 128;
         
-        manager.process_packet(&csi_info, state);
+        manager.process_packet(&csi_info);
     }
     
-    ESP_LOGI(TAG, "After movement: state=%d, callbacks=%d", 
-             csi_processor_get_state(&g_processor), g_callback_count);
+    csi_motion_state_t state = csi_processor_get_state(&g_processor);
+    ESP_LOGI(TAG, "After movement: state=%d, callbacks=%d", state, g_callback_count);
     
     // Should have detected motion
     TEST_ASSERT_EQUAL(CSI_STATE_MOTION, state);
     
     // Callbacks should have been invoked (100 packets / 20 publish_rate = 5)
     TEST_ASSERT_TRUE(g_callback_count >= 4);
+}
+
+// ============================================================================
+// CHANNEL CHANGE DETECTION TESTS
+// ============================================================================
+
+void test_csi_manager_channel_change_resets_buffer(void) {
+    CSIManager manager;
+    // publish_rate=20 means channel check happens every 20 packets
+    manager.init(&g_processor, TEST_SUBCARRIERS, 0.5f, 10, 20, false, 11.0f, false, 7, 3.0f, &g_wifi_mock);
+    manager.enable(nullptr);
+    
+    // Process packets on channel 6 to build up variance
+    // Need at least publish_rate packets to trigger variance calculation
+    for (int i = 0; i < 60; i++) {
+        wifi_csi_info_t csi_info = {};
+        csi_info.buf = const_cast<int8_t*>(movement_packets[i % 100]);
+        csi_info.len = 128;
+        csi_info.rx_ctrl.channel = 6;
+        
+        manager.process_packet(&csi_info);
+    }
+    
+    // Verify we have some variance built up
+    float variance_before = csi_processor_get_moving_variance(&g_processor);
+    ESP_LOGI(TAG, "Variance before channel change: %.4f", variance_before);
+    TEST_ASSERT_TRUE(variance_before > 0);
+    
+    // Simulate AP channel change - need to process publish_rate packets
+    // on new channel to trigger the check (channel check happens at publish time)
+    for (int i = 0; i < 20; i++) {
+        wifi_csi_info_t csi_info = {};
+        csi_info.buf = const_cast<int8_t*>(baseline_packets[i]);
+        csi_info.len = 128;
+        csi_info.rx_ctrl.channel = 11;  // Different channel!
+        
+        manager.process_packet(&csi_info);
+    }
+    
+    // Buffer should have been cleared at publish time, variance should be reset to 0
+    float variance_after = csi_processor_get_moving_variance(&g_processor);
+    ESP_LOGI(TAG, "Variance after channel change: %.4f", variance_after);
+    
+    // After buffer clear, variance should be exactly 0
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, variance_after);
+}
+
+void test_csi_manager_same_channel_no_reset(void) {
+    CSIManager manager;
+    manager.init(&g_processor, TEST_SUBCARRIERS, 0.5f, 10, 20, false, 11.0f, false, 7, 3.0f, &g_wifi_mock);
+    manager.enable(nullptr);
+    
+    // Process packets on same channel
+    for (int i = 0; i < 30; i++) {
+        wifi_csi_info_t csi_info = {};
+        csi_info.buf = const_cast<int8_t*>(movement_packets[i % 100]);
+        csi_info.len = 128;
+        csi_info.rx_ctrl.channel = 6;
+        
+        manager.process_packet(&csi_info);
+    }
+    
+    float variance_before = csi_processor_get_moving_variance(&g_processor);
+    
+    // Process more packets on same channel - should NOT reset
+    for (int i = 30; i < 60; i++) {
+        wifi_csi_info_t csi_info = {};
+        csi_info.buf = const_cast<int8_t*>(movement_packets[i % 100]);
+        csi_info.len = 128;
+        csi_info.rx_ctrl.channel = 6;  // Same channel
+        
+        manager.process_packet(&csi_info);
+    }
+    
+    float variance_after = csi_processor_get_moving_variance(&g_processor);
+    
+    // Variance should still be present (buffer NOT cleared)
+    TEST_ASSERT_TRUE(variance_after > 0);
+    ESP_LOGI(TAG, "Same channel: variance %.4f -> %.4f", variance_before, variance_after);
 }
 
 // ============================================================================
@@ -624,7 +727,7 @@ void test_csi_manager_callback_wrapper_triggered(void) {
     TEST_ASSERT_EQUAL(ESP_OK, result);
     
     // Create CSI data
-    wifi_csi_info_t csi_info;
+    wifi_csi_info_t csi_info = {};
     csi_info.buf = const_cast<int8_t*>(baseline_packets[0]);
     csi_info.len = 128;
     
@@ -693,6 +796,7 @@ int process(void) {
     RUN_TEST(test_csi_manager_with_calibrator_not_calibrating);
     RUN_TEST(test_csi_manager_null_calibrator_processes_normally);
     RUN_TEST(test_csi_manager_delegates_when_calibrating);
+    RUN_TEST(test_csi_manager_calibration_triggers_periodic_yield);
     RUN_TEST(test_csi_manager_calibrator_lifecycle);
     
     // Error path tests
@@ -706,6 +810,10 @@ int process(void) {
     // Integration tests (using WiFiCSIMock)
     RUN_TEST(test_csi_manager_full_workflow);
     RUN_TEST(test_csi_manager_baseline_then_motion);
+    
+    // Channel change detection tests
+    RUN_TEST(test_csi_manager_channel_change_resets_buffer);
+    RUN_TEST(test_csi_manager_same_channel_no_reset);
     
     return UNITY_END();
 }
