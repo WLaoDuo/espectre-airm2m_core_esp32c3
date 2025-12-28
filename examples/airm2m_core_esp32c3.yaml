@@ -49,7 +49,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/francescopace/espectre
-      ref: 4b5a05cfce72fd6b2d62c860190acc6303e533b6 #main
+      ref: 07c951452f2fc704ef0f3ab822dc51ea85309738 #main
     components: [ espectre ]
     refresh: always
 
