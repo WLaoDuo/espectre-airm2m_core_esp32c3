@@ -41,10 +41,10 @@ jobs:
 
       - name: Update commit hash in config
         run: |
-          cp espectre-c3.yaml espectre-c3.yaml.backup
+          cp examples/airm2m_core_esp32c3.yaml examples/espectre-c3.yaml.backup
           COMMIT_HASH="${{ github.event.inputs.commit_hash || 'main' }}"
-          sed -i "s|ref: .*|ref: ${COMMIT_HASH}|" espectre-c3.yaml
-          grep "ref:" espectre-c3.yaml
+          sed -i "s|ref: .*|ref: ${COMMIT_HASH}|" examples/airm2m_core_esp32c3.yaml
+          grep "ref:" examples/airm2m_core_esp32c3.yaml
           
       # 2. 使用 Dashboard 命令提前验证并安装依赖，减少 Compile 时的意外中断
       - name: Config validation
