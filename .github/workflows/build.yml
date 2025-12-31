@@ -1,14 +1,22 @@
-name: ESPHome Build
+name: ESPHome firmware Build
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
+      file:
+        description: "esphome config.yaml path"
+        required: true
+        default: "examples/airm2m_core_esp32c3.yaml"
+        type: choice
+        options:
+          - "examples/airm2m_core_esp32c3.yaml"
+          - "examples/espectre-s3.yaml"
+          - "examples/espectre-c6.yaml"
       commit:
         description: "commit"
         required: false
         default: "main"
+      
 
 jobs:
   build:
@@ -41,27 +49,38 @@ jobs:
 
       - name: Update commit hash in config
         run: |
-          cp examples/airm2m_core_esp32c3.yaml examples/espectre-c3.yaml.backup
+          cp ${{ github.event.inputs.file }} ${{ github.event.inputs.file }}.backup
           COMMIT_HASH="${{ github.event.inputs.commit  || 'main' }}"
-          sed -i "s|ref: .*|ref: ${COMMIT_HASH}|" examples/airm2m_core_esp32c3.yaml
-          grep "ref:" examples/airm2m_core_esp32c3.yaml
+          sed -i "s|ref: .*|ref: ${COMMIT_HASH}|" ${{ github.event.inputs.file }}
+          grep "ref:" ${{ github.event.inputs.file }}
           
       # 2. 使用 Dashboard 命令提前验证并安装依赖，减少 Compile 时的意外中断
       - name: Config validation
-        run: esphome config examples/airm2m_core_esp32c3.yaml
+        run: esphome ${{ inputs.file }}
 
       - name: Compile ESPHome Binary
-        run: esphome compile examples/airm2m_core_esp32c3.yaml
+        run: esphome compile ${{ inputs.file }}
         env:
           COMMIT_HASH: ${{ inputs.commit }}
 
       # 3. 优化产物收集：
       # 使用通配符定位所有的 factory.bin，并将其整理到一个固定目录方便下载
-      - name: find bin
+      - name: find bin and rename
         run: |
           mkdir -p output
           # 搜索 examples 目录下所有的 factory.bin 并拷贝到 output 文件夹
           find examples/.esphome/build -name "firmware*.bin" -exec cp {} output/ \;
+          
+          # 1. 处理文件名变量
+          # 假设输入是 examples/airm2m_core_esp32c3.yaml
+          FULL_PATH="${{ github.event.inputs.file }}"
+          # 去掉路径部分 (得到 airm2m_core_esp32c3.yaml)
+          FILENAME_WITH_EXT="${FULL_PATH##*/}"
+          # 去掉 .yaml 后缀 (得到 airm2m_core_esp32c3)
+          PURE_FILENAME="${FILENAME_WITH_EXT%.yaml}"
+
+          mv "output/firmware.factory.bin" "output/${PURE_FILENAME}-${{ github.event.inputs.commit }}.factory.bin"
+          mv "output/firmware.ota.bin" "output/${PURE_FILENAME}-${{ github.event.inputs.commit }}.ota.bin"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
