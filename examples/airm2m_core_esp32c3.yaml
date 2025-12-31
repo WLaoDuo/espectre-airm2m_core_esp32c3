@@ -58,7 +58,9 @@ external_components:
 # Note: For Super Mini boards, keep traffic_generator_rate <= 94
 espectre:
   id: espectre_csi
-  #traffic_generator_rate: 94  # Safe limit for C3 Super Mini boards
+  gain_lock: auto  # auto (default), enabled, disabled
+  traffic_generator_rate: 94  # Safe limit for C3 Super Mini boards
+  traffic_generator_mode: dns   # dns (default) or ping
 
 # Dashboard import for easy adoption
 dashboard_import:
