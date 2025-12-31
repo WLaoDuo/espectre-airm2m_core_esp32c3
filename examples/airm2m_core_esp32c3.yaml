@@ -5,7 +5,7 @@
 #
 # Tested boards (community verified):
 # - ESP32-C3 Super Mini (AliExpress/Temu, tested by @mvfc)
-# - AirM2M Core ESP32-C3 (tested by @WLaoDuo)
+# - AirM2M Core ESP32-C3 合宙esp32c3核心开发板 (tested by @WLaoDuo)
 #
 # ESP32-C3 Super Mini Notes:
 # - Set traffic_generator_rate to 94 or less (higher values cause calibration issues)
@@ -23,6 +23,7 @@ esphome:
   # Uncomment the next line if you have multiple ESPectre devices (adds MAC suffix to name)
   # name_add_mac_suffix: true
   # Uncomment for ESP32-C3 Super Mini clones with flash issues (use DIO instead of QIO)
+  # dio flash mode for airm2m_core_esp32c3(合宙esp32c3核心开发板) or ESP32-C3 Super Mini
   platformio_options:
     board_build.flash_mode: dio
     board_build.mcu: esp32c3
@@ -83,7 +84,8 @@ improv_serial:
 # Logging
 logger:
   baud_rate: 115200
-  hardware_uart: UART0
+  #external USB-UART bridges (like CH343)
+  hardware_uart: UART0 
   level: INFO
 # Home Assistant API
 api:
