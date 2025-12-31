@@ -50,7 +50,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/francescopace/espectre
-      ref: main
+      ref: main # branch , commit hash 
     components: [ espectre ]
     refresh: always
 
