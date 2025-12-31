@@ -56,7 +56,7 @@ jobs:
           
       # 2. 使用 Dashboard 命令提前验证并安装依赖，减少 Compile 时的意外中断
       - name: Config validation
-        run: esphome ${{ inputs.file }}
+        run: esphome config  ${{ inputs.file }}
 
       - name: Compile ESPHome Binary
         run: esphome compile ${{ inputs.file }}
