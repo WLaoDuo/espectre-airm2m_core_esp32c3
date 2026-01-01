@@ -19,29 +19,60 @@ on:
       
 
 jobs:
-  build:
+  setup-cache:
+    name: Setup Build Cache
     runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # 1. 优化缓存：不仅缓存 .esphome 编译中间件，还缓存 pip 依赖
-      - name: Cache ESPHome and Pip
-        uses: actions/cache@v4
+      - uses: actions/checkout@v6
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Cache PlatformIO
+        id: cache
+        uses: actions/cache@v5
         with:
           path: |
-            ~/.cache/pip
-            .esphome
-          key: esphome-${{ runner.os }}-${{ hashFiles('*.yaml') }}
+            ~/.platformio
+            ~/.esphome/cache
+          key: pio-espidf-${{ hashFiles('components/espectre/**') }}
           restore-keys: |
-            esphome-${{ runner.os }}-
+            pio-espidf-
+      
+      - name: Install ESPHome and warm cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install esphome
+  build:
+    runs-on: ubuntu-latest
+    needs: setup-cache
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip' # setup-python 内置的 pip 缓存支持
-
+          
+      - name: Restore PlatformIO Cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+            ~/.esphome/cache
+          key: pio-espidf-${{ hashFiles('components/espectre/**') }}
+          restore-keys: |
+            pio-espidf-
+            
       - name: Install ESPHome
         run: |
           python -m pip install --upgrade pip
