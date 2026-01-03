@@ -10,8 +10,7 @@ on:
         type: choice
         options:
           - "examples/airm2m_core_esp32c3.yaml"
-          - "examples/espectre-s3.yaml"
-          - "examples/espectre-c6.yaml"
+          - "examples/airm2m_core_esp32c3-dev.yaml"
       commit:
         description: "commit"
         required: false
