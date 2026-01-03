@@ -92,6 +92,11 @@ ota:
 debug:
   update_interval: 5s
 
+i2c:
+  sda: GPIO4
+  scl: GPIO5
+  scan: true
+
 sensor:
   - platform: debug
     free:
@@ -100,6 +105,21 @@ sensor:
       name: "Max Free Block"
     loop_time:
       name: "Loop Time"
+  - platform: bmp280_i2c
+    temperature:
+      name: "bmp280_temp"
+      oversampling: 16x
+    pressure:
+      name: "bmp280_pressure"
+    address: 0x77
+    update_interval: 60s
+  - platform: aht10
+    variant: AHT20
+    temperature:
+      name: "aht20_temp"
+    humidity:
+      name: "aht20_humidity"
+    update_interval: 60s
 
 text_sensor:
   - platform: debug
