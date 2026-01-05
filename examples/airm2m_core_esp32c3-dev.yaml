@@ -66,11 +66,11 @@ wifi:
 captive_portal:
 
 # Improv provisioning via BLE
-#esp32_improv:
-#  authorizer: none
+# esp32_improv:
+ # authorizer: none
 
 # Improv provisioning via USB
-#improv_serial:
+improv_serial:
 
 # Logging
 logger:
@@ -120,6 +120,16 @@ sensor:
     humidity:
       name: "aht20_humidity"
     update_interval: 60s
+  - platform: adc
+    pin: GPIO3
+    name: "mq5 adc"
+    update_interval: 10s
+    # 12db 对应约 0-3.3V 量程，ESPHome 会自动应用芯片内部校准
+    attenuation: 12dB
+    # 如果你想要毫伏值(mV)，可以使用乘法滤镜
+    #filters:
+    #  - multiply: 1000
+    unit_of_measurement: "V"
 
 text_sensor:
   - platform: debug
