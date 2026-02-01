@@ -288,7 +288,7 @@ jobs:
         run: esphome compile ${{ matrix.config }}
         
       - name: Find bin and rename
-        if: !matrix.qemu_chip
+        if: ! matrix.qemu_chip
         run: |
           mkdir -p output
           find examples/.esphome/build -name "firmware*.bin" -exec cp {} output/ \;
