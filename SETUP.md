@@ -27,6 +27,8 @@ Choose the frimware for the chip is on your board , and download it from [Releas
 
 
 ---
+## Quick Start
+
 ## What You Need
 
 **Hardware:**
@@ -41,7 +43,6 @@ Choose the frimware for the chip is on your board , and download it from [Releas
 
 ---
 
-## Quick Start
 
 ### 1. Install ESPHome
 
