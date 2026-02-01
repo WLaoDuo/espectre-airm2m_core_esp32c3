@@ -330,3 +330,13 @@ jobs:
         with:
           name: firmware-${{ matrix.chip }}
           path: output/${{ matrix.chip }}-*.bin
+          
+      - name: Debug info
+        run: |
+          echo "github.ref = ${{ github.ref }}"
+          echo "github.ref_name = ${{ github.ref_name }}"
+          echo "matrix.qemu_chip = ${{ matrix.qemu_chip }}"
+          echo "matrix.chip = ${{ matrix.chip }}"
+          echo "Condition: !matrix.qemu_chip = ${{ !matrix.qemu_chip }}"
+          echo "Condition: startsWith = ${{ startsWith(github.ref, 'refs/tags/') }}"
+          echo "Full condition: ${{ !matrix.qemu_chip && startsWith(github.ref, 'refs/tags/') }}"
