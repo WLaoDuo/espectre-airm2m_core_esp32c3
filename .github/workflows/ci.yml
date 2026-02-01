@@ -290,7 +290,7 @@ jobs:
       - name: Find bin and rename
         run: |
           mkdir -p output
-          find .esphome/build -name "firmware*.bin" -exec cp {} output/ \;
+          find examples/.esphome/build -name "firmware*.bin" -exec cp {} output/ \;
           mv "output/firmware.factory.bin" "output/${{ matrix.chip }}-factory.bin"
           mv "output/firmware.ota.bin" "output/${{ matrix.chip }}-ota.bin"
       
