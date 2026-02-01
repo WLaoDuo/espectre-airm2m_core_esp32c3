@@ -330,4 +330,3 @@ jobs:
         with:
           name: firmware-${{ matrix.chip }}
           path: output/${{ matrix.chip }}-*.bin
-          retention-days: 7
