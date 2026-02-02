@@ -16,15 +16,16 @@ Complete guide to install and configure ESPectre with ESPHome.
 - Chrome browser or [ESPConnect](https://github.com/thelastoutpostworkshop/ESPConnect/)
 - Home Assistant (recommended, but optional)
 
-### 1. Download firmware from [Releases](https://github.com/francescopace/espectre/releases)
+### 1. Download firmware from [Releases](https://github.com/francescopace/espectre/releases/latest)
 
-Choose the frimware for the chip is on your board , and download it from [Releases](https://github.com/francescopace/espectre/releases)
+Choose the firmware for the chip is on your board , and download it from [Releases](https://github.com/francescopace/espectre/releases/latest)
 
 ### 2. Flash Firmware
 
-- Find chip.factory.bin
+- Find chip-**factory**.bin
 - Chrome open [ESPConnect](https://thelastoutpostworkshop.github.io/ESPConnect/) to flash
 
+![ESPConnect](images/ESPConnect.png)
 
 ---
 ## Quick Start
