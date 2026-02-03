@@ -137,3 +137,31 @@ text_sensor:
       name: "Device Info"
     reset_reason:
       name: "Reset Reason"
+
+output:
+  - platform: ledc
+    pin: #GPIO12  #D4
+      number: LED1_BUILTIN
+      ignore_pin_validation_error: true
+    id: "led_driver_12"
+    frequency: 2000
+    inverted: false
+
+  - platform: ledc
+    pin: #GPIO13  #D5    
+      number: LED2_BUILTIN
+      ignore_pin_validation_error: true
+    id: "led_driver_13"
+    frequency: 2000
+    inverted: false
+# 3. 灯光实体配置 (这是关键：将底层 output 包装成可查看的灯)
+light:
+  - platform: monochromatic
+    name: "右LED (GPIO12)"
+    output: "led_driver_12"
+    id: light_12
+    
+  - platform: monochromatic
+    name: "左LED (GPIO13)"
+    output: "led_driver_13"
+    id: light_13
