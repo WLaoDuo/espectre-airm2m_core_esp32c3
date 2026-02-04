@@ -18,7 +18,7 @@ Complete guide to install and configure ESPectre with ESPHome.
 
 ### 1. Download firmware from [Releases](https://github.com/francescopace/espectre/releases/latest)
 
-Choose the firmware for the chip is on your board , and download it from [Releases](https://github.com/francescopace/espectre/releases/latest)
+Choose the firmware for the chip that is on your board , and download it from [Releases](https://github.com/francescopace/espectre/releases/latest)
 
 ### 2. Flash Firmware
 
